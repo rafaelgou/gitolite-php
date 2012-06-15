@@ -26,3 +26,6 @@ spl_autoload_register(
         }
     }
 );
+
+// PHPGit_Repository
+require_once((__DIR__) . '/../vendor/php-git-repo/lib/PHPGit/Repository.php');

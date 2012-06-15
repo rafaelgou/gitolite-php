@@ -9,16 +9,111 @@ namespace Gitolite;
  */
 class Gitolite
 {
-    protected $localRepository;
-    protected $remoteRepositoryURL;
-    protected $gitUsername;
-    protected $gitEmail;
+    protected $gitRemoteRepositoryURL = null;
+    protected $gitLocalRepositoryPath = null;
+    protected $gitEmail = null;
+    protected $gitUsername = null;
+    /**
+     * @var PHPGit_Repository
+     */
+    protected $gitoliteRepository = null;
 
-    protected $confFile;
     protected $users = array();
     protected $teams = array();
     protected $repos = array();
 
+
+    /**
+     * Set GitRemoteRepositoryURL
+     *
+     * @param string $gitRemoteRepositoryURL The remote repository URL
+     *
+     * @return Gitolite\Gitolite
+     */
+    public function setGitRemoteRepositoryURL($gitRemoteRepositoryURL)
+    {
+        $this->gitRemoteRepositoryURL = (string) $gitRemoteRepositoryURL;
+        return $this;
+    }
+
+    /**
+     * Get GitRemoteRepositoryURL
+     *
+     * @return string
+     */
+    public function getGitRemoteRepositoryURL()
+    {
+        return $this->gitRemoteRepositoryURL;
+    }
+
+    /**
+     * Set GitLocalRepositoryPath
+     *
+     * @param string $gitLocalRepositoryPath The git local repository Path
+     *
+     * @return Gitolite\Gitolite
+     */
+    public function setGitLocalRepositoryPath($gitLocalRepositoryPath)
+    {
+        $this->gitLocalRepositoryPath = (string) $gitLocalRepositoryPath;
+        return $this;
+    }
+
+    /**
+     * Get GitLocalRepositoryPath
+     *
+     * @return string
+     */
+    public function getGitLocalRepositoryPath()
+    {
+        return $this->gitLocalRepositoryPath;
+    }
+
+    /**
+     * Set GitEmail
+     *
+     * @param string $gitEmail The git user email
+     *
+     * @return Gitolite\Gitolite
+     */
+    public function setGitEmail($gitEmail)
+    {
+        $this->gitEmail = (string) $gitEmail;
+        return $this;
+    }
+
+    /**
+     * Get GitEmail
+     *
+     * @return string
+     */
+    public function getGitEmail()
+    {
+        return $this->gitEmail;
+    }
+
+    /**
+     * Set GitUsername
+     *
+     * @param string $gitUsername The git user name
+     *
+     * @return Gitolite\User
+     */
+    public function setGitUsername($gitUsername)
+    {
+        $this->gitUsername = (string) $gitUsername;
+        return $this;
+    }
+
+    /**
+     * Get GitUsername
+     *
+     * @return string
+     */
+    public function getGitUsername()
+    {
+        return $this->gitUsername;
+    }
 
     /**
      * Set Repos
@@ -154,6 +249,38 @@ class Gitolite
         }
 
         return $return;
+    }
+
+    /**
+     * Get PHPGit_Repository
+     *
+     * @return PHPGit_Repository
+     */
+    protected function getGitoliteRepository()
+    {
+        if (null === $this->getGitLocalRepositoryPath()) {
+            throw new \Exception('Git local repository path not defined');
+        }
+        try {
+            $this->gitoliteRepository = new \PHPGit_Repository($this->getGitLocalRepositoryPath());
+        } catch (\Exception $exc) {
+
+            if (file_exists($this->getGitLocalRepositoryPath())) {
+                throw new \Exception("Directory {$this->getGitLocalRepositoryPath()} already exists, impossible to create repository" );
+            } else {
+                if (mkdir($this->getGitLocalRepositoryPath(), 0770)) {
+                    $this->gitoliteRepository = \PHPGit_Repository::create($this->getGitLocalRepositoryPath());
+                } else {
+                    throw new \Exception('Impossible to create Directory informed in Git local repository (possibly.');
+                }
+            }
+        }
+        return $this->gitoliteRepository;
+    }
+
+    public function test()
+    {
+        $repo = $this->getGitoliteRepository();
     }
 
 }
