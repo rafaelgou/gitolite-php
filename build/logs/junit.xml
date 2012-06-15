@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="gitolite-php" tests="4" assertions="6" failures="0" errors="0" time="0.005190">
+    <testsuite name="Tests\Gitolite\GitoliteTest" file="/var/www/MeusProjetos/Gitolite/gitolite-php/tests/Gitolite/GitoliteTest.php" namespace="Tests\Gitolite" fullPackage="Tests.Gitolite" tests="2" assertions="2" failures="0" errors="0" time="0.001525">
+      <testsuite name="Tests\Gitolite\GitoliteTest::testGitoliteEntry" tests="2" assertions="2" failures="0" errors="0" time="0.001525">
+        <testcase name="testGitoliteEntry with data set #0" assertions="1" time="0.001320"/>
+        <testcase name="testGitoliteEntry with data set #1" assertions="1" time="0.000205"/>
+      </testsuite>
+    </testsuite>
+    <testsuite name="Tests\Gitolite\UserTest" file="/var/www/MeusProjetos/Gitolite/gitolite-php/tests/Gitolite/UserTest.php" namespace="Tests\Gitolite" fullPackage="Tests.Gitolite" tests="2" assertions="4" failures="0" errors="0" time="0.003665">
+      <testsuite name="Tests\Gitolite\UserTest::testUsersEntries" tests="2" assertions="4" failures="0" errors="0" time="0.003665">
+        <testcase name="testUsersEntries with data set #0" assertions="2" time="0.003429"/>
+        <testcase name="testUsersEntries with data set #1" assertions="2" time="0.000236"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

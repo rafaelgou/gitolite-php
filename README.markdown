@@ -25,8 +25,18 @@ The main use is to create an gitolite-admin repo from scratch, and create GUIs t
 
 ## Instalation
 
-git clone git://github.com/rafaelgou/gitolite-php.git
-cd gitolite-php
-git submodules update
+    git clone git://github.com/rafaelgou/gitolite-php.git
+    cd gitolite-php
+    git submodules update
 
+You can install as submodule in your Git project, but don't forget
+to run the git submodule update inside the gitolite-php directory.
 
+## Use
+
+    // Register Autoload
+    include_once('PATH_TO/gitolite-php/src/GitoliteAutoload.php');
+    \GitoliteAutoload::registerAutoload();
+
+    // PHPGit_Repository
+    require_once('PATH_TO/gitolite-php//vendor/php-git-repo/lib/PHPGit/Repository.php');

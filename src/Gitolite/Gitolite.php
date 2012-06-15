@@ -5,7 +5,20 @@ namespace Gitolite;
 /**
  * Gitolite Class
  *
- * @author Rafael Goulart <rafaelgou@gmail.com>
+ * Project:   gitolite-php
+ * File:      src/Gitolite/Gitolite.php
+ *
+ * Copyright (C) 2012 Rafael Goulart
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by  the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * @author  Rafael Goulart <rafaelgou@gmail.com>
+ * @license GNU Lesser General Public License
+ * @link    https://github.com/rafaelgou/gitolite-php
+ * see CHANGELOG
  */
 class Gitolite
 {
@@ -266,7 +279,7 @@ class Gitolite
         } catch (\Exception $exc) {
 
             if (file_exists($this->getGitLocalRepositoryPath())) {
-                throw new \Exception("Directory {$this->getGitLocalRepositoryPath()} already exists, impossible to create repository" );
+                throw new \Exception("Directory {$this->getGitLocalRepositoryPath()} already exists, impossible to create repository");
             } else {
                 if (mkdir($this->getGitLocalRepositoryPath(), 0770)) {
                     $this->gitoliteRepository = \PHPGit_Repository::create($this->getGitLocalRepositoryPath());
@@ -278,6 +291,13 @@ class Gitolite
         return $this->gitoliteRepository;
     }
 
+    /**
+     * Simple test function
+     *
+     * @deprecated
+     *
+     * @return void
+     */
     public function test()
     {
         $repo = $this->getGitoliteRepository();
