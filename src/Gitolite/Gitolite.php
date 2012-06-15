@@ -35,6 +35,12 @@ class Gitolite
     protected $teams = array();
     protected $repos = array();
 
+    protected $log = array();
+
+    const GITOLITE_CONF_FILE = 'gitolite.conf';
+    const GITOLITE_CONF_DIR  = 'conf/';
+    const GITOLITE_KEY_DIR   = 'keydir/';
+    const GITOLITE_REPO_DIR  = 'conf/repos/';
 
     /**
      * Set GitRemoteRepositoryURL
@@ -199,7 +205,7 @@ class Gitolite
      */
     public function addUser(User $user)
     {
-        $this->user[] = $user;
+        $this->users[] = $user;
         return $this;
     }
 
@@ -243,48 +249,28 @@ class Gitolite
     }
 
     /**
-     * Returns acl
-     *
-     * Format: <permission> <zero or more refexes> = <one or more users/user teams>
-     *
-     * @return string
-     */
-    public function renderConfFile()
-    {
-        $return = '';
-
-        foreach ($this->getTeams() as $team) {
-            $return .= $team->render() . PHP_EOL;
-        }
-
-        foreach ($this->getRepos() as $repo) {
-            $return .= $repo->render();
-        }
-
-        return $return;
-    }
-
-    /**
      * Get PHPGit_Repository
      *
      * @return PHPGit_Repository
      */
     protected function getGitoliteRepository()
     {
-        if (null === $this->getGitLocalRepositoryPath()) {
-            throw new \Exception('Git local repository path not defined');
-        }
-        try {
-            $this->gitoliteRepository = new \PHPGit_Repository($this->getGitLocalRepositoryPath());
-        } catch (\Exception $exc) {
+        if (null === $this->gitoliteRepository) {
+            if (null === $this->getGitLocalRepositoryPath()) {
+                throw new \Exception('Git local repository path not defined');
+            }
+            try {
+                $this->gitoliteRepository = new \PHPGit_Repository($this->getGitLocalRepositoryPath());
+            } catch (\Exception $exc) {
 
-            if (file_exists($this->getGitLocalRepositoryPath())) {
-                throw new \Exception("Directory {$this->getGitLocalRepositoryPath()} already exists, impossible to create repository");
-            } else {
-                if (mkdir($this->getGitLocalRepositoryPath(), 0770)) {
-                    $this->gitoliteRepository = \PHPGit_Repository::create($this->getGitLocalRepositoryPath());
+                if (file_exists($this->getGitLocalRepositoryPath())) {
+                    throw new \Exception("Directory {$this->getGitLocalRepositoryPath()} already exists, impossible to create repository");
                 } else {
-                    throw new \Exception('Impossible to create Directory informed in Git local repository (possibly.');
+                    if (mkdir($this->getGitLocalRepositoryPath(), 0770)) {
+                        $this->gitoliteRepository = \PHPGit_Repository::create($this->getGitLocalRepositoryPath());
+                    } else {
+                        throw new \Exception('Impossible to create Directory informed in Git local repository (possibly).');
+                    }
                 }
             }
         }
@@ -292,15 +278,223 @@ class Gitolite
     }
 
     /**
-     * Simple test function
+     * Write a File down to disk
      *
-     * @deprecated
+     * @param string  $filename    The file to be write to disk
+     * @param string  $data        The content to be write
+     * @param boolean $checkChange Wheter check or not if data is changed
+     *
+     * @return string
+     */
+    protected function writeFile($filename, $data, $checkChange=true)
+    {
+        if (!file_exists($filename)) {
+            if (!file_put_contents($filename, $data)) {
+                throw new \Exception("Impossible to write file {$filename}", 1);
+            }
+        } else {
+            if (!$checkChange) {
+                if (!file_put_contents($filename, $data)) {
+                    throw new \Exception("Impossible to write file {$filename}", 1);
+                }
+            } else {
+                if ($data != file_get_contents($filename)) {
+                    file_put_contents($filename, $data);
+                }
+                return true;
+            }
+        }
+    }
+
+    /**
+     * Push configuration to Gitolite Server
      *
      * @return void
      */
-    public function test()
+    public function pushConfig()
     {
-        $repo = $this->getGitoliteRepository();
+        $cmds[] = 'push origin master';
+        $this->runGitCommand($cmds);
+    }
+
+    /**
+     * Commits changes in configuration
+     *
+     * @return void
+     */
+    public function commitConfig()
+    {
+        $cmds[] = 'add .';
+        $cmds[] = 'commit -m "Update configuration from ' .
+        $_SERVER['SERVER_NAME'] . ' on ' .date('Y-m-d H:i:s') . '"';
+        $this->runGitCommand($cmds);
+    }
+
+    /**
+     * Write full conf file to disk
+     *
+     * @return void
+     */
+    public function writeFullConfFile()
+    {
+        return $this->writeFile(
+            $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR .
+            self::GITOLITE_CONF_DIR . self::GITOLITE_CONF_FILE,
+            $this->renderFullConfFile()
+        );
+    }
+
+    /**
+     * Write users keys to disk
+     *
+     * @return void
+     */
+    public function writeUsers()
+    {
+        foreach ($this->getUsers() as $user) {
+            $this->writeFile(
+                $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR .
+                self::GITOLITE_KEY_DIR .
+                $user->renderKeyFileName(),
+                $user->getFirstKey()
+            );
+        }
+    }
+
+    /**
+     * Write everything to the disk, commit and push
+     *
+     * @return void
+     */
+    public function writeAndPush()
+    {
+        $this->gitConfig();
+        $this->writeFullConfFile();
+        $this->writeUsers();
+        $this->commitConfig();
+        $this->pushConfig();
+    }
+
+    /**
+     * Return full conf file
+     *
+     * @return string
+     */
+    public function renderFullConfFile()
+    {
+        return $this->renderUserAndTeams() . $this->renderRepos();
+    }
+
+    /**
+     * Return user and teams for conf file
+     *
+     * @return string
+     */
+    public function renderUserAndTeams()
+    {
+        $return = '';
+        foreach ($this->getTeams() as $team) {
+            $return .= $team->render() . PHP_EOL;
+        }
+        return $return;
+    }
+
+    /**
+     * Return repos for conf file
+     *
+     * @return string
+     */
+    public function renderRepos()
+    {
+        $return = '';
+        foreach ($this->getRepos() as $repo) {
+            $return .= $repo->render();
+        }
+        return $return;
+    }
+
+    /**
+     * Configure the repository
+     *
+     * @return void
+     */
+    public function gitConfig()
+    {
+        $cmds[] = sprintf('config user.name "%s"', $this->getGitUsername());
+        $cmds[] = sprintf('config user.email "%s"', $this->getGitEmail());
+        $cmds[] = 'remote rm gitoliteorigin';
+        $cmds[] = sprintf('remote add gitoliteorigin %s', $this->getGitRemoteRepositoryURL());
+        $cmds[] = 'pull origin master';
+        $this->runGitCommand($cmds);
+    }
+
+    /**
+     * Run git commands
+     *
+     * @param mixed $cmds A command or an array of commands
+     *
+     * @return string
+     */
+    protected function runGitCommand($cmds='')
+    {
+        if (!is_string($cmds) && !is_array($cmds)) {
+            return false;
+        }
+
+        if (!is_array($cmds)) {
+            $cmds = array($cmds);
+        }
+
+        foreach ($cmds as $cmd) {
+            try {
+                $date = date('Y-m-d H:i:s');
+                $output = $this->getGitoliteRepository()->git($cmd);
+                $this->log("$date COMMAND RUN: git $cmd");
+                $this->log("$date OUTPUT : . $output");
+            } catch (\GitRuntimeException $e) {
+                $this->log("$date GIT ERROR: " . $e->getMessage());
+            } catch (\Exception $e) {
+                $this->log("$date ERROR: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Log a message
+     *
+     * @param type $message The message to log
+     *
+     * @return void
+     */
+    protected function log($message)
+    {
+        $this->log[] = $content;
+//        $file = option('root_dir') . '/db/log/' . date('mdY');
+//        $handle = fopen($file, 'a+');
+//        $content = nl2br($content);
+//        fwrite($handle, $content);
+//        fwrite($handle, "\n\n\n");
+//        fclose($handle);
+    }
+
+    /**
+     * Get the log
+     *
+     * @return array
+     */
+    public function getLog()
+    {
+        return $this->log;
+    }
+
+    /**
+     * Get the log as string
+     * 
+     * @return string
+     */
+    public function getLogAsString()
+    {
+        return implode(PHP_EOL, $this->log);
     }
 
 }

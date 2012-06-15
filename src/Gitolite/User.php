@@ -76,6 +76,16 @@ class User
     }
 
     /**
+     * Get First Key
+     *
+     * @return string
+     */
+    public function getFirstKey()
+    {
+        return (string) $this->keys[0];
+    }
+
+    /**
      * Add key
      *
      * @param string $key A key
@@ -84,7 +94,7 @@ class User
      */
     public function addKey($key)
     {
-        $this->key[] = (string) $key;
+        $this->keys[] = (string) $key;
         return $this;
     }
 
