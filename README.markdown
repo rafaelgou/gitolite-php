@@ -23,7 +23,7 @@ The main use is to create an gitolite-admin repo from scratch, and create GUIs t
 
 - Read from gitolite.conf
 
-## Instalation
+## Installation
 
     git clone git://github.com/rafaelgou/gitolite-php.git
     cd gitolite-php
