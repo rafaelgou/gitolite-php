@@ -24,6 +24,7 @@ class Team
 {
     protected $name = null;
     protected $users = array();
+    protected $teams = array();
 
     /**
      * Set Name
@@ -98,6 +99,45 @@ class Team
     }
 
     /**
+     * Set Teams
+     *
+     * @param array $teams An array of team objects
+     *
+     * @return Gitolite\Acl
+     */
+    public function setTeams(array $teams)
+    {
+        $this->teams = array();
+        foreach ($teams as $team) {
+            $this->addTeam($team);
+        }
+        return $this;
+    }
+
+    /**
+     * Get Teams
+     *
+     * @return array of Teams
+     */
+    public function getTeams()
+    {
+        return $this->teams;
+    }
+
+    /**
+     * Add Team
+     *
+     * @param Team $team A team object
+     *
+     * @return Gitolite\Acl
+     */
+    public function addTeam(Team $team)
+    {
+        $this->teams[] = $team;
+        return $this;
+    }
+
+    /**
      * Returns team group line
      *
      * Format: @<team_name> = <user 1> <user 2> <user 3> <user 'n'>
@@ -113,8 +153,14 @@ class Team
             $users[] = $user->getUsername();
         }
 
+        $teams = array();
+        foreach ($this->getTeams() as $team) {
+            $teams[] = $team->getFormatedName();
+        }
+
         return $this->getFormatedName() . ' = '
-                . implode(' ', $users)
+                . implode(' ', $users) . ' '
+                . implode(' ', $teams)
                 . ($nl ? PHP_EOL : '');
     }
 
