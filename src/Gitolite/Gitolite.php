@@ -580,7 +580,7 @@ class Gitolite
      */
     protected function log($message)
     {
-        $this->log[] = $content;
+        $this->log[] = $message;
 //        $file = option('root_dir') . '/db/log/' . date('mdY');
 //        $handle = fopen($file, 'a+');
 //        $content = nl2br($content);
