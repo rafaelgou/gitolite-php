@@ -247,6 +247,118 @@ class Gitolite
         $this->teams[] = $team;
         return $this;
     }
+    
+    /**
+     * Import gitolite.conf
+     *
+     */	
+	public function import()
+	{
+		
+		$file = file($this->gitLocalRepositoryPath.'/conf/gitolite.conf');
+		
+		foreach($file as $line)
+		{
+			$line = trim($line);
+			if($line == '') continue;
+			
+			if(preg_match('/^[@]/', $line))
+			{				
+				$line_split = preg_split("/[=]+/", $line, 2);
+				if(count($line_split) != 2) throw new \Exception('Invalid team def.');
+				
+				$team_name = substr(trim($line_split[0]), 1);
+				
+				$team = new Team();
+				$team->setName($team_name);
+				
+				$usr = preg_split("/[\s\t]+/", trim($line_split[1]));
+				foreach($usr as $u)
+				{
+					// is team
+					if(substr($u, 0, 1) == '@')
+					{
+						$u = substr($u, 1);
+						if( ! isset($this->teams[$u])) throw new \Exception('Undef team.');
+						$team->addTeam($this->teams[$u]);
+					}
+					// is user
+					else
+					{
+						if(isset($this->users[$u]))
+						{
+							$team->addUser($this->users[$u]);
+						}
+						else
+						{
+							$user = new User();
+							$user->setUsername($u);
+							$key = $this->gitLocalRepositoryPath.'/keydir/'.$u.'.pub';
+							if(file_exists($key)) $user->addKey(file_get_contents($key));
+							$this->users[$u] = $user;
+							$team->addUser($user);
+						}						
+					}
+				}
+				
+				$this->teams[$team_name] = $team;
+				
+			}
+			elseif(preg_match('/^repo/', $line))
+			{
+				$line_split = preg_split("/[\s\t]+/", $line, 2);
+				
+				if(count($line_split) != 2) throw new \Exception('Invalid repository def.');
+				
+				$repo = new Repo();
+				$repo->setName(trim($line_split[1]));
+			}
+			elseif(preg_match('/^(R|RW|RW\+|\-|RWC|RW\+C|RWD|RW\+D|RWCD|RW\+CD|RWDC|RW\+DC)/', $line))
+			{
+				$teams = array();
+				$users = array();
+				
+				$line_split = preg_split("/[=]+/", $line, 2);
+				if(count($line_split) != 2) throw new \FuelException('Invalid rule.');
+				
+				$acl_split = preg_split("/[\s\t]+/", trim($line_split[0]), 2);
+				$refexes = (isset($acl_split[1])) ? $acl_split[1] : false;
+				
+				$acl = new Acl();
+				$acl->setPermission($acl_split[0]);
+				if($refexes) $acl->setRefexes($refexes);
+				
+				$usr = preg_split("/[\s\t]+/", trim($line_split[1]));
+				foreach($usr as $u)
+				{
+					// is team
+					if(substr($u, 0, 1) == '@')
+					{
+						$u = substr($u, 1);
+						if( ! isset($this->teams[$u])) throw new \Exception('Undef. team');
+						
+						$acl->addTeam($this->teams[$u]);
+					}
+					// is user
+					else
+					{
+						if( ! isset($this->users[$u]))
+						{
+							$this->users[$u] = new User();
+							$this->users[$u]->setUsername($u);
+							$key = $this->gitLocalRepositoryPath.'/keydir/'.$u.'.pub';
+							if(file_exists($key)) $this->users[$u]->addKey(file_get_contents($key));
+						}
+						
+						$acl->addUser($this->users[$u]);
+					}
+				}
+				
+				$repo->addAcl($acl);
+				$this->repos[$repo->getName()] = $repo;
+			}
+		}
+	}
 
     /**
      * Get PHPGit_Repository
