@@ -255,7 +255,7 @@ class Gitolite
 	public function import()
 	{
 		
-		$file = file($this->gitLocalRepositoryPath.'/conf/gitolite.conf');
+		$file = file($this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_CONF_DIR . DIRECTORY_SEPARATOR . self::GITOLITE_CONF_FILE);
 		
 		foreach($file as $line)
 		{
@@ -293,7 +293,7 @@ class Gitolite
 						{
 							$user = new User();
 							$user->setUsername($u);
-							$key = $this->gitLocalRepositoryPath.'/keydir/'.$u.'.pub';
+							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $u . '.pub';
 							if(file_exists($key)) $user->addKey(file_get_contents($key));
 							$this->users[$u] = $user;
 							$team->addUser($user);
@@ -346,7 +346,7 @@ class Gitolite
 						{
 							$this->users[$u] = new User();
 							$this->users[$u]->setUsername($u);
-							$key = $this->gitLocalRepositoryPath.'/keydir/'.$u.'.pub';
+							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $u . '.pub';
 							if(file_exists($key)) $this->users[$u]->addKey(file_get_contents($key));
 						}
 						
