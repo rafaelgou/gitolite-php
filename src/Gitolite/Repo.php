@@ -100,7 +100,7 @@ class Repo
         $return = 'repo ' . $this->getName() . PHP_EOL;
 
         foreach ($this->getAcls() as $acl) {
-            $return .= '    ' . $acl->render() . PHP_EOL;
+            $return .= '    ' . $acl->render();
         }
 
         return $return . PHP_EOL;

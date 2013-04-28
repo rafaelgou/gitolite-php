@@ -506,9 +506,9 @@ class Gitolite
     {
         $return = '';
         foreach ($this->getTeams() as $team) {
-            $return .= $team->render() . PHP_EOL;
+            $return .= $team->render();
         }
-        return $return;
+        return $return . PHP_EOL;
     }
 
     /**
