@@ -190,7 +190,11 @@ class Acl
             $users[] = $user->getUsername();
         }
 
-        return $this->permission . ' = '
+        $refexes = ( ! empty($this->refexes)) ? $this->refexes . ' ' : '';
+
+        return $this->permission . ' '
+        		. $refexes
+        		. '= '
                 . implode(' ', $users) . ' '
                 . implode(' ', $teams)
                 . ($nl ? PHP_EOL : '');
