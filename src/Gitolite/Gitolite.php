@@ -180,7 +180,19 @@ class Gitolite
     {
         return $this->repos;
     }
-
+    
+    /**
+     * Get Repo
+     *
+     * @param string repo name
+     *
+     * @return mixed object of Repo or false
+     */
+    public function getRepo($name)
+    {
+        return (isset($this->repos[$name])) ? $this->repos[$$name] : false;
+    }
+    
     /**
      * Add repo
      *
@@ -190,8 +202,20 @@ class Gitolite
      */
     public function addRepo(Repo $repo)
     {
-        $this->repos[] = $repo;
+    	$name = $repo->getName();
+        $this->repos[$name] = $repo;
         return $this;
+    }
+    
+    /**
+     * Delete repo
+     *
+     * @param string repo name
+     *
+     */
+    public function delRepo($name)
+    {
+    	unset($this->repos[$name]);
     }
 
     /**
@@ -219,6 +243,18 @@ class Gitolite
     {
         return $this->users;
     }
+    
+    /**
+     * Get User
+     *
+     * @param string username
+     *
+     * @return mixed object of User or false
+     */
+    public function getUser($username)
+    {
+        return (isset($this->users[$username])) ? $this->users[$username] : false;
+    }
 
     /**
      * Add user
@@ -229,7 +265,8 @@ class Gitolite
      */
     public function addUser(User $user)
     {
-        $this->users[] = $user;
+    	$username = $user->getUsername();
+        $this->users[$username] = $user;
         return $this;
     }
 
@@ -260,6 +297,18 @@ class Gitolite
     }
 
     /**
+     * Get Team
+     *
+     * @param string team name
+     *
+     * @return mixed object of Team or false
+     */
+    public function getTeam($name)
+    {
+        return (isset($this->teams[$name])) ? $this->teams[$name] : false;
+    }
+
+    /**
      * Add Team
      *
      * @param string $team A team object
@@ -268,7 +317,8 @@ class Gitolite
      */
     public function addTeam(Team $team)
     {
-        $this->teams[] = $team;
+    	$name = $team->getName();
+        $this->teams[$name] = $team;
         return $this;
     }
     
