@@ -26,6 +26,7 @@ class Gitolite
     protected $gitLocalRepositoryPath = null;
     protected $gitEmail = null;
     protected $gitUsername = null;
+    protected $gitServerName = null;
     /**
      * @var PHPGit_Repository
      */
@@ -132,6 +133,29 @@ class Gitolite
     public function getGitUsername()
     {
         return $this->gitUsername;
+    }
+    
+    /**
+     * Set GitServername
+     *
+     * @param string $gitServername The git server name
+     *
+     * @return Gitolite\Gitolite
+     */
+    public function setGitServerName($gitServerName)
+    {
+        $this->gitServerName = (string) $gitServerName;
+        return $this;
+    }
+
+    /**
+     * Get GitServername
+     *
+     * @return string
+     */
+    public function getGitServerName()
+    {
+        return $this->gitServerName;
     }
 
     /**
@@ -438,8 +462,8 @@ class Gitolite
     {
         $cmds[] = 'add .';
         $cmds[] = 'commit -m "Update configuration from ' .
-        $_SERVER['SERVER_NAME'] . ' on ' .date('Y-m-d H:i:s') . '"';
         $this->runGitCommand($cmds);
+        	$this->getGitServerName() . ' on ' .date('Y-m-d H:i:s') . '"';
     }
 
     /**
