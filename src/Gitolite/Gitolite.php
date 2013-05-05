@@ -367,7 +367,7 @@ class Gitolite
 						{
 							$user = new User();
 							$user->setUsername($u);
-							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $u . '.pub';
+							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $user->renderKeyFileName();
 							if(file_exists($key)) $user->addKey(file_get_contents($key));
 							$this->users[$u] = $user;
 							$team->addUser($user);
@@ -420,7 +420,7 @@ class Gitolite
 						{
 							$this->users[$u] = new User();
 							$this->users[$u]->setUsername($u);
-							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $u . '.pub';
+							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $this->users[$u]->renderKeyFileName();
 							if(file_exists($key)) $this->users[$u]->addKey(file_get_contents($key));
 						}
 						
