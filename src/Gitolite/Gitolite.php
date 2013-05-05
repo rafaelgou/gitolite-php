@@ -545,6 +545,9 @@ class Gitolite
      */
     public function writeUsers()
     {
+    	// delete old keys
+    	exec('rm ' . $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . '*.pub');
+    	
         foreach ($this->getUsers() as $user) {
             $this->writeFile(
                 $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR .
