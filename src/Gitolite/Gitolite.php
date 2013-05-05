@@ -26,6 +26,7 @@ class Gitolite
     protected $gitLocalRepositoryPath = null;
     protected $gitEmail = null;
     protected $gitUsername = null;
+    protected $gitServerName = null;
     /**
      * @var PHPGit_Repository
      */
@@ -133,6 +134,29 @@ class Gitolite
     {
         return $this->gitUsername;
     }
+    
+    /**
+     * Set GitServername
+     *
+     * @param string $gitServername The git server name
+     *
+     * @return Gitolite\Gitolite
+     */
+    public function setGitServerName($gitServerName)
+    {
+        $this->gitServerName = (string) $gitServerName;
+        return $this;
+    }
+
+    /**
+     * Get GitServername
+     *
+     * @return string
+     */
+    public function getGitServerName()
+    {
+        return $this->gitServerName;
+    }
 
     /**
      * Set Repos
@@ -156,7 +180,19 @@ class Gitolite
     {
         return $this->repos;
     }
-
+    
+    /**
+     * Get Repo
+     *
+     * @param string repo name
+     *
+     * @return mixed object of Repo or false
+     */
+    public function getRepo($name)
+    {
+        return (isset($this->repos[$name])) ? $this->repos[$$name] : false;
+    }
+    
     /**
      * Add repo
      *
@@ -166,8 +202,20 @@ class Gitolite
      */
     public function addRepo(Repo $repo)
     {
-        $this->repos[] = $repo;
+    	$name = $repo->getName();
+        $this->repos[$name] = $repo;
         return $this;
+    }
+    
+    /**
+     * Delete repo
+     *
+     * @param string repo name
+     *
+     */
+    public function delRepo($name)
+    {
+    	unset($this->repos[$name]);
     }
 
     /**
@@ -195,6 +243,18 @@ class Gitolite
     {
         return $this->users;
     }
+    
+    /**
+     * Get User
+     *
+     * @param string username
+     *
+     * @return mixed object of User or false
+     */
+    public function getUser($username)
+    {
+        return (isset($this->users[$username])) ? $this->users[$username] : false;
+    }
 
     /**
      * Add user
@@ -205,7 +265,8 @@ class Gitolite
      */
     public function addUser(User $user)
     {
-        $this->users[] = $user;
+    	$username = $user->getUsername();
+        $this->users[$username] = $user;
         return $this;
     }
 
@@ -236,6 +297,18 @@ class Gitolite
     }
 
     /**
+     * Get Team
+     *
+     * @param string team name
+     *
+     * @return mixed object of Team or false
+     */
+    public function getTeam($name)
+    {
+        return (isset($this->teams[$name])) ? $this->teams[$name] : false;
+    }
+
+    /**
      * Add Team
      *
      * @param string $team A team object
@@ -244,7 +317,8 @@ class Gitolite
      */
     public function addTeam(Team $team)
     {
-        $this->teams[] = $team;
+    	$name = $team->getName();
+        $this->teams[$name] = $team;
         return $this;
     }
     
@@ -293,7 +367,7 @@ class Gitolite
 						{
 							$user = new User();
 							$user->setUsername($u);
-							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $u . '.pub';
+							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $user->renderKeyFileName();
 							if(file_exists($key)) $user->addKey(file_get_contents($key));
 							$this->users[$u] = $user;
 							$team->addUser($user);
@@ -346,7 +420,7 @@ class Gitolite
 						{
 							$this->users[$u] = new User();
 							$this->users[$u]->setUsername($u);
-							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $u . '.pub';
+							$key = $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . DIRECTORY_SEPARATOR . $this->users[$u]->renderKeyFileName();
 							if(file_exists($key)) $this->users[$u]->addKey(file_get_contents($key));
 						}
 						
@@ -425,7 +499,7 @@ class Gitolite
      */
     public function pushConfig()
     {
-        $cmds[] = 'push origin master';
+        $cmds[] = 'push gitoliteorigin master';
         $this->runGitCommand($cmds);
     }
 
@@ -436,10 +510,18 @@ class Gitolite
      */
     public function commitConfig()
     {
-        $cmds[] = 'add .';
-        $cmds[] = 'commit -m "Update configuration from ' .
-        $_SERVER['SERVER_NAME'] . ' on ' .date('Y-m-d H:i:s') . '"';
-        $this->runGitCommand($cmds);
+    	$status = $this->runGitCommand('status');
+    	
+    	if( ! preg_match('/nothing to commit/', $status))
+    	{
+        	$cmds[] = 'add .';
+        	$cmds[] = 'commit -m "Update configuration from ' .
+        	$this->getGitServerName() . ' on ' .date('Y-m-d H:i:s') . '"';
+        	$this->runGitCommand($cmds);
+        	return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -463,6 +545,9 @@ class Gitolite
      */
     public function writeUsers()
     {
+    	// delete old keys
+    	exec('rm ' . $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_KEY_DIR . '*.pub');
+    	
         foreach ($this->getUsers() as $user) {
             $this->writeFile(
                 $this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR .
@@ -483,8 +568,7 @@ class Gitolite
         $this->gitConfig();
         $this->writeFullConfFile();
         $this->writeUsers();
-        $this->commitConfig();
-        $this->pushConfig();
+        if($this->commitConfig()) $this->pushConfig();
     }
 
     /**
@@ -534,9 +618,17 @@ class Gitolite
     {
         $cmds[] = sprintf('config user.name "%s"', $this->getGitUsername());
         $cmds[] = sprintf('config user.email "%s"', $this->getGitEmail());
-        $cmds[] = 'remote rm gitoliteorigin';
-        $cmds[] = sprintf('remote add gitoliteorigin %s', $this->getGitRemoteRepositoryURL());
-        $cmds[] = 'pull origin master';
+        
+        $remotes = $this->runGitCommand('remote -v');
+        $gitoliteRemote = sprintf('gitoliteorigin	%s', $this->getGitRemoteRepositoryURL());
+
+        if( ! preg_match('/'.preg_quote($gitoliteRemote, '/').'/', $remotes))
+        {
+	        if(preg_match('/gitoliteorigin/', $remotes)) $cmds[] = 'remote rm gitoliteorigin';
+	        $cmds[] = 'remote add '.$gitoliteRemote;
+        }
+        
+        $cmds[] = 'pull --rebase gitoliteorigin master';
         $this->runGitCommand($cmds);
     }
 
@@ -564,11 +656,13 @@ class Gitolite
                 $this->log("$date COMMAND RUN: git $cmd");
                 $this->log("$date OUTPUT : . $output");
             } catch (\GitRuntimeException $e) {
-                $this->log("$date GIT ERROR: " . $e->getMessage());
+                $this->log_error("$date GIT ERROR: " . $e->getMessage());
             } catch (\Exception $e) {
-                $this->log("$date ERROR: " . $e->getMessage());
+                $this->log_error("$date ERROR: " . $e->getMessage());
             }
         }
+        
+        return $output;
     }
 
     /**
@@ -580,13 +674,19 @@ class Gitolite
      */
     protected function log($message)
     {
-        $this->log[] = $message;
-//        $file = option('root_dir') . '/db/log/' . date('mdY');
-//        $handle = fopen($file, 'a+');
-//        $content = nl2br($content);
-//        fwrite($handle, $content);
-//        fwrite($handle, "\n\n\n");
-//        fclose($handle);
+        $this->log['info'][] = $message;
+    }
+    
+    /**
+     * Log a error message
+     *
+     * @param type $message The message to log
+     *
+     * @return void
+     */
+    protected function log_error($message)
+    {
+        $this->log['error'][] = $message;
     }
 
     /**
@@ -602,11 +702,14 @@ class Gitolite
     /**
      * Get the log as string
      * 
+     * @param  string	type = info or error
      * @return string
      */
-    public function getLogAsString()
+    public function getLogAsString($type = 'info')
     {
-        return implode(PHP_EOL, $this->log);
+    	if( ! isset($this->log[$type])) return false;
+    
+        return implode(PHP_EOL, $this->log[$type]);
     }
 
 }

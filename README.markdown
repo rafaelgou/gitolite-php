@@ -64,7 +64,8 @@ Sample use:
         ->setGitEmail('bla@blamail.com')
         ->setGitLocalRepositoryPath('/var/www/MeusProjetos/Gitolite/tmp/gitolite-admin')
     //    ->setGitRemoteRepositoryURL('/var/www/MeusProjetos/gitolite-tmp');
-        ->setGitRemoteRepositoryURL('git@bladomain.com:gitolite-demo');
+        ->setGitRemoteRepositoryURL('git@bladomain.com:gitolite-demo')
+        ->setGitServerName('My server name');
 
     $user1 = new User();
     $user1->setEmail('bla@blamail.com')
@@ -99,3 +100,10 @@ Sample use:
     $gitolite->writeAndPush();
 
     echo $gitolite->renderFullConfFile();
+    
+Also you can use import method and edit only some data or delete repo:
+	
+	<?php
+		$gitolite->import();
+		
+		$gitolite->delRepo('name');		
