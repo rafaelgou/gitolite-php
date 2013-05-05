@@ -603,9 +603,9 @@ class Gitolite
                 $this->log("$date COMMAND RUN: git $cmd");
                 $this->log("$date OUTPUT : . $output");
             } catch (\GitRuntimeException $e) {
-                $this->log("$date GIT ERROR: " . $e->getMessage());
+                $this->log_error("$date GIT ERROR: " . $e->getMessage());
             } catch (\Exception $e) {
-                $this->log("$date ERROR: " . $e->getMessage());
+                $this->log_error("$date ERROR: " . $e->getMessage());
             }
         }
     }
@@ -619,7 +619,19 @@ class Gitolite
      */
     protected function log($message)
     {
-        $this->log[] = $message;
+        $this->log['info'][] = $message;
+    }
+    
+    /**
+     * Log a error message
+     *
+     * @param type $message The message to log
+     *
+     * @return void
+     */
+    protected function log_error($message)
+    {
+        $this->log['error'][] = $message;
     }
 
     /**
@@ -635,11 +647,14 @@ class Gitolite
     /**
      * Get the log as string
      * 
+     * @param  string	type = info or error
      * @return string
      */
-    public function getLogAsString()
+    public function getLogAsString($type = 'info')
     {
-        return implode(PHP_EOL, $this->log);
+    	if( ! isset($this->log[$type])) return false;
+    
+        return implode(PHP_EOL, $this->log[$type]);
     }
 
 }
