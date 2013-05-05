@@ -608,6 +608,8 @@ class Gitolite
                 $this->log_error("$date ERROR: " . $e->getMessage());
             }
         }
+        
+        return $output;
     }
 
     /**
