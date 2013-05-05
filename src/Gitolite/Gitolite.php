@@ -449,7 +449,7 @@ class Gitolite
      */
     public function pushConfig()
     {
-        $cmds[] = 'push origin master';
+        $cmds[] = 'push gitoliteorigin master';
         $this->runGitCommand($cmds);
     }
 
@@ -460,10 +460,18 @@ class Gitolite
      */
     public function commitConfig()
     {
-        $cmds[] = 'add .';
-        $cmds[] = 'commit -m "Update configuration from ' .
-        $this->runGitCommand($cmds);
+    	$status = $this->runGitCommand('status');
+    	
+    	if( ! preg_match('/nothing to commit/', $status))
+    	{
+        	$cmds[] = 'add .';
+        	$cmds[] = 'commit -m "Update configuration from ' .
         	$this->getGitServerName() . ' on ' .date('Y-m-d H:i:s') . '"';
+        	$this->runGitCommand($cmds);
+        	return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -507,8 +515,7 @@ class Gitolite
         $this->gitConfig();
         $this->writeFullConfFile();
         $this->writeUsers();
-        $this->commitConfig();
-        $this->pushConfig();
+        if($this->commitConfig()) $this->pushConfig();
     }
 
     /**
@@ -558,9 +565,17 @@ class Gitolite
     {
         $cmds[] = sprintf('config user.name "%s"', $this->getGitUsername());
         $cmds[] = sprintf('config user.email "%s"', $this->getGitEmail());
-        $cmds[] = 'remote rm gitoliteorigin';
-        $cmds[] = sprintf('remote add gitoliteorigin %s', $this->getGitRemoteRepositoryURL());
-        $cmds[] = 'pull origin master';
+        
+        $remotes = $this->runGitCommand('remote -v');
+        $gitoliteRemote = sprintf('gitoliteorigin	%s', $this->getGitRemoteRepositoryURL());
+
+        if( ! preg_match('/'.preg_quote($gitoliteRemote, '/').'/', $remotes))
+        {
+	        if(preg_match('/gitoliteorigin/', $remotes)) $cmds[] = 'remote rm gitoliteorigin';
+	        $cmds[] = 'remote add '.$gitoliteRemote;
+        }
+        
+        $cmds[] = 'pull --rebase gitoliteorigin master';
         $this->runGitCommand($cmds);
     }
 
