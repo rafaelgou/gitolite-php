@@ -515,6 +515,17 @@ class Gitolite
     	if( ! preg_match('/nothing to commit/', $status))
     	{
         	$cmds[] = 'add .';
+        	
+        	// check for deleted keys
+        	preg_match_all('/deleted:[\s]+(.+)/', $status, $matches);
+        	if(isset($matches[1]) && is_array($matches[1]))
+        	{
+	        	foreach($matches[1] as $v)
+	        	{
+		        	$cmds[] = 'rm '.$v;
+	        	}
+        	}
+        	
         	$cmds[] = 'commit -m "Update configuration from ' .
         	$this->getGitServerName() . ' on ' .date('Y-m-d H:i:s') . '"';
         	$this->runGitCommand($cmds);
@@ -628,7 +639,7 @@ class Gitolite
 	        $cmds[] = 'remote add '.$gitoliteRemote;
         }
         
-        $cmds[] = 'pull --rebase gitoliteorigin master';
+        $cmds[] = 'pull gitoliteorigin master';
         $this->runGitCommand($cmds);
     }
 
