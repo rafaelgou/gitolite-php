@@ -190,7 +190,7 @@ class Gitolite
      */
     public function getRepo($name)
     {
-        return (isset($this->repos[$name])) ? $this->repos[$$name] : false;
+        return (isset($this->repos[$name])) ? $this->repos[$name] : false;
     }
     
     /**
