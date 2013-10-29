@@ -176,7 +176,7 @@ class Acl
             throw new \Exception("Permission not defined");
         }
 
-        if (count($this->teams) == 0 && count($this->user) == 0) {
+        if (count($this->teams) == 0 && count($this->users) == 0) {
             throw new \Exception("No users neither teams defined");
         }
 
