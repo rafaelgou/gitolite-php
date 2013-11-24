@@ -2,7 +2,7 @@
     "name": "rafaelgou/gitolite-php",
     "type": "library",
     "description": "Classes to admin Gitolite from PHP",
-    "license": "proprietary",
+    "license": "LGPL-2.0",
     "keywords": ["git", "gitolite"],
     "authors": [
         {
