@@ -27,7 +27,7 @@
     "homepage": "https://github.com/rafaelgou/gitolite-php",
     "require": {
         "php": ">=5.3.0",
-        "ornicar/php-git-repo": "*"
+        "ornicar/php-git-repo": "dev-master"
     },
     "autoload": {
         "psr-0": {
