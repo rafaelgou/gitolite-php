@@ -329,6 +329,11 @@ class Gitolite
 	public function import()
 	{
 		
+        $specialTeamAll = new Team();
+        $specialTeamAll->setName('all');
+        $this->addTeam($specialTeamAll);
+
+                
 		$file = file($this->getGitLocalRepositoryPath() . DIRECTORY_SEPARATOR . self::GITOLITE_CONF_DIR . DIRECTORY_SEPARATOR . self::GITOLITE_CONF_FILE);
 		
 		foreach($file as $line)
@@ -601,7 +606,8 @@ class Gitolite
     {
         $return = '';
         foreach ($this->getTeams() as $team) {
-            $return .= $team->render();
+            if($team->getName() !="all" )
+                $return .= $team->render();
         }
         return $return . PHP_EOL;
     }
