@@ -409,13 +409,7 @@ class Gitolite
 					if(substr($u, 0, 1) == '@')
 					{
 						$u = substr($u, 1);
-						
-						if($u!="all")
-                         			{
-			                         	   if( ! isset($this->teams[$u])) throw new \Exception('Undef. team');
-                        				   $acl->addTeam($this->teams[$u]);
-
-			                        }						
+						if( ! isset($this->teams[$u])) throw new \Exception('Undef. team');
 						
 						$acl->addTeam($this->teams[$u]);
 					}
