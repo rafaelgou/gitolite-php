@@ -57,7 +57,7 @@ class Repo
      */
     public function setAcls(array $acls)
     {
-        $this->$acls = $acls;
+        $this->acls = $acls;
         return $this;
     }
 
